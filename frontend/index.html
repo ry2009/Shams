@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHAMS Ops Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Enterprise Dark - "Obsidian" */
+      --bg-root: #09090b;
+      --bg-sidebar: #09090b;
+      --bg-card: #18181b;
+      --bg-header: #09090b;
+      --bg-input: #27272a;
+      --bg-hover: #27272a;
+      
+      --border-base: #27272a;
+      --border-light: #3f3f46;
+      
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-tertiary: #71717a;
+      
+      --accent-blue: #f97316;
+      --accent-blue-dim: rgba(249, 115, 22, 0.12);
+      
+      --status-green: #10b981;
+      --status-green-dim: rgba(16, 185, 129, 0.1);
+      --status-amber: #f59e0b;
+      --status-amber-dim: rgba(245, 158, 11, 0.1);
+      --status-red: #ef4444;
+      --status-red-dim: rgba(239, 68, 68, 0.1);
+      --status-blue: #3b82f6;
+      --status-blue-dim: rgba(59, 130, 246, 0.12);
+
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg-root);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-base);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      border-bottom: 1px solid var(--border-base);
+    }
+    .brand span { color: var(--accent-blue); margin-right: 8px; }
+
+    .nav {
+      flex: 1;
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      color: var(--text-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s var(--ease);
+      font-weight: 500;
+      font-size: 13px;
+      background: transparent;
+      border: none;
+      text-align: left;
+      width: 100%;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      box-shadow: inset 3px 0 0 var(--accent-blue);
+    }
+
+    .sidebar-footer {
+      padding: 20px;
+      border-top: 1px solid var(--border-base);
+    }
+
+    /* --- Main Layout --- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .header {
+      height: 64px;
+      border-bottom: 1px solid var(--border-base);
+      background: var(--bg-header);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-base);
+      border-radius: 99px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--status-green); }
+    .dot.offline { background: var(--status-red); }
+
+    /* Scrollable Content Area */
+    .content-viewport {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* --- Components --- */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
+    .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .grid-1-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-base);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-base);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.01);
+    }
+    .card-header h3 { margin: 0; font-size: 14px; font-weight: 600; }
+
+    .card-body { padding: 20px; }
+
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-base);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .stat-label { color: var(--text-tertiary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 8px; }
+    .stat-value { color: var(--text-primary); font-size: 28px; font-weight: 600; font-family: var(--font-mono); letter-spacing: -0.03em; }
+
+    /* Tables with internal scrolling */
+    .table-container {
+      overflow-y: auto;
+      max-height: 500px; 
+      width: 100%;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+      z-index: 10;
+      text-align: left;
+      padding: 12px 20px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border-base);
+      box-shadow: 0 1px 0 var(--border-base);
+    }
+
+    tbody td {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-base);
+      color: var(--text-secondary);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg-hover); color: var(--text-primary); }
+
+    .mono { font-family: var(--font-mono); font-size: 12px; }
+
+    /* Tags */
+    .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .tag.green { background: var(--status-green-dim); color: var(--status-green); }
+    .tag.amber { background: var(--status-amber-dim); color: var(--status-amber); }
+    .tag.red { background: var(--status-red-dim); color: var(--status-red); }
+    .tag.gray { background: var(--bg-hover); color: var(--text-tertiary); }
+    .tag.blue { background: var(--status-blue-dim); color: var(--status-blue); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--text-primary); color: var(--bg-root); border-color: var(--text-primary); }
+    .btn-primary:hover { background: #fff; transform: translateY(-1px); }
+    
+    .btn-secondary { background: transparent; border-color: var(--border-light); color: var(--text-primary); }
+    .btn-secondary:hover { background: var(--bg-hover); }
+
+    .btn-sm { padding: 4px 10px; font-size: 12px; height: 28px; }
+
+    /* Inputs */
+    .input {
+      background: var(--bg-input);
+      border: 1px solid var(--border-base);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 13px;
+    }
+    .input:focus { outline: none; border-color: var(--text-tertiary); }
+
+    /* Dropzone */
+    .dropzone {
+      border: 1px dashed var(--border-light);
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .dropzone:hover { background: var(--bg-hover); border-color: var(--text-secondary); }
+
+    /* Views */
+    .view { display: none; animation: fade-in 0.3s var(--ease); }
+    .view.active { display: block; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Activity Feed */
+    .feed { list-style: none; padding: 0; margin: 0; }
+    .feed-item {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-base);
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+    }
+    .feed-time { color: var(--text-tertiary); font-family: var(--font-mono); font-size: 11px; }
+    .feed-text { color: var(--text-secondary); }
+
+    /* Chat Overlay - Fixed Position */
+    #chat-overlay {
+      display: none;
+      position: fixed;
+      bottom: 84px;
+      right: 24px;
+      width: min(520px, calc(100vw - 40px));
+      height: min(640px, calc(100vh - 120px));
+      background: var(--bg-card);
+      border: 1px solid var(--border-base);
+      border-radius: 12px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+      z-index: 10000;
+      flex-direction: column;
+    }
+    #chat-overlay.open { display: flex; }
+
+    .chat-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-base);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+    }
+    
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg-root);
+    }
+
+    .chat-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border-base);
+      background: var(--bg-card);
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Message Bubbles */
+    .msg { max-width: 85%; padding: 10px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; }
+    .msg.bot { background: var(--bg-hover); color: var(--text-secondary); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg.user { background: var(--accent-blue); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-meta { font-size: 11px; opacity: 0.7; margin-top: 4px; display: block; }
+    .msg-tools { margin-top: 8px; font-size: 11px; color: var(--text-tertiary); display: grid; gap: 2px; }
+    .msg-thinking { opacity: 0.8; font-style: italic; }
+    .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      background: transparent;
+      border: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .chip:hover { background: var(--bg-hover); }
+
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: var(--accent-blue);
+      color: white;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: none;
+      transition: transform 0.2s;
+      z-index: 10001;
+    }
+    .fab:hover { transform: scale(1.05); }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 11000;
+      padding: 24px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      width: min(980px, 100%);
+      max-height: min(88vh, 900px);
+      background: var(--bg-card);
+      border: 1px solid var(--border-base);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-base);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-body {
+      overflow: auto;
+      padding: 16px 18px 20px;
+      display: grid;
+      gap: 12px;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .kv div span { color: var(--text-tertiary); display: block; font-size: 11px; }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border-base);
+      background: rgba(255,255,255,0.01);
+    }
+    .tiny {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    @media (max-width: 1024px) {
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+      .grid-2-1 { grid-template-columns: 1fr; }
+      .grid-1-1 { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="brand"><span>✦</span> SHAMS Ops</div>
+    <div class="nav">
+      <button class="nav-item active" onclick="nav('dashboard')">Dashboard</button>
+      <button class="nav-item" onclick="nav('dispatch')">Dispatch Center</button>
+      <button class="nav-item" onclick="nav('tickets')">Exceptions</button>
+      <button class="nav-item" onclick="nav('billing')">Billing Ledger</button>
+      <button class="nav-item" onclick="nav('admin')">Settings</button>
+    </div>
+    <div class="sidebar-footer">
+      <button class="nav-item" id="nav-seed" style="color: var(--accent-blue);">
+        ⟳ Reset Simulation
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <header class="header">
+      <div class="header-title" id="page-title">Dashboard</div>
+      <div class="status-pill">
+        <div class="dot" id="sys-dot"></div>
+        <span id="sys-text">Connecting...</span>
+      </div>
+    </header>
+
+    <div class="content-viewport">
+      <div class="container">
+        
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="view active">
+          <div class="grid-4">
+            <div class="stat-box">
+              <div class="stat-label">Active Loads</div>
+              <div class="stat-value" id="kpi-loads">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Auto Assign</div>
+              <div class="stat-value" id="kpi-assign">0%</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Ticket Approval</div>
+              <div class="stat-value" id="kpi-approve">0%</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Rev. Captured</div>
+              <div class="stat-value" id="kpi-rev">$0</div>
+            </div>
+          </div>
+
+          <div class="grid-2-1">
+            <div class="card">
+              <div class="card-header">
+                <h3>Live Operations</h3>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-secondary btn-sm" id="btn-seed">Reset Demo Data</button>
+                  <button class="btn btn-secondary btn-sm" id="btn-script">Run Guided Demo</button>
+                  <button class="btn btn-primary btn-sm" id="btn-atlas-demo">Run Atlas Live Demo</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <p style="color:var(--text-secondary); margin-top:0;">
+                  Monitor autonomous agents processing loads, assigning drivers, and auditing bills in real-time.
+                </p>
+                <div id="demo-status" style="font-size:12px; color:var(--text-tertiary);">System idle.</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>Agent Activity Feed</h3></div>
+              <div class="table-container" style="max-height: 200px;">
+                <ul class="feed" id="activity-feed">
+                  <li class="feed-item"><span class="feed-text">No recent events.</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DISPATCH -->
+        <div id="dispatch" class="view">
+          <div class="grid-1-1">
+            <!-- Load Board -->
+            <div class="card" style="flex: 2;">
+              <div class="card-header">
+                <h3>Load Board</h3>
+                <button class="btn btn-secondary btn-sm" onclick="loadBoard()">Refresh</button>
+              </div>
+              <div class="table-container" style="height: 500px;">
+                <table id="tbl-loads">
+                  <thead><tr><th>ID</th><th>Customer</th><th>Status</th><th>Miles</th><th>AI Action</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Driver Fleet -->
+            <div class="card" style="flex: 1;">
+              <div class="card-header">
+                <h3>Driver Fleet</h3>
+                <span class="tag gray" id="driver-count">0 Drivers</span>
+              </div>
+              <div class="table-container" style="height: 500px;">
+                <table id="tbl-drivers">
+                  <thead><tr><th>Driver</th><th>Truck</th><th>Status</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:24px;">
+            <div class="card-header">
+              <h3>Driver App Dispatch Feed</h3>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary btn-sm" id="dispatch-send-batch">Send Batch</button>
+                <button class="btn btn-secondary btn-sm" id="dispatch-feed-refresh">Refresh Feed</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display:grid; grid-template-columns: 1fr 140px; gap:8px;">
+                <input class="input" id="dispatch-load-id" placeholder="Load ID (e.g. LOAD00008)">
+                <button class="btn btn-primary btn-sm" id="dispatch-send-one">Dispatch Load</button>
+              </div>
+              <div class="tiny" id="dispatch-feed-msg" style="margin-top:8px;">No dispatch packets sent yet.</div>
+            </div>
+            <div class="table-container" style="height: 240px;">
+              <table id="tbl-dispatch-feed">
+                <thead><tr><th>Dispatch</th><th>Load</th><th>Driver</th><th>Status</th><th>Sent</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TICKETS -->
+        <div id="tickets" class="view">
+          <div class="grid-2-1">
+            <div class="card">
+              <div class="card-header">
+                <h3>Exception Queue</h3>
+                <button class="btn btn-secondary btn-sm" onclick="loadQueue()">Refresh</button>
+              </div>
+              <div class="card-body" style="padding: 12px 20px; border-bottom: 1px solid var(--border-base); font-size: 12px; color: var(--text-tertiary);">
+                AI-flagged discrepancies in documents or rates requiring review.
+              </div>
+              <div class="table-container" style="height: 450px;">
+                <table id="tbl-queue">
+                  <thead><tr><th>Ref</th><th>Load</th><th>Confidence</th><th>AI Action</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>Ingestion</h3></div>
+              <div class="card-body">
+                <div class="dropzone" id="dropzone">
+                  <p style="margin:0; font-weight:500; color:var(--text-primary);">Upload Documents</p>
+                  <p style="margin:4px 0 0; font-size:12px; color:var(--text-tertiary);">Drag & Drop PDF/IMG</p>
+                </div>
+                <input type="file" id="file-in" hidden multiple>
+                <div id="upload-msg" style="margin-top:12px; font-size:12px; color:var(--text-secondary);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BILLING -->
+        <div id="billing" class="view">
+          <div class="card">
+            <div class="card-header">
+              <h3>Billing Audit Ledger</h3>
+              <button class="btn btn-secondary btn-sm" onclick="loadBilling()">Refresh</button>
+            </div>
+            <div class="card-body" style="padding: 12px 20px; border-bottom: 1px solid var(--border-base); font-size: 12px; color: var(--text-tertiary);">
+              Loads ready for invoicing after successful AI audit.
+            </div>
+            <div class="table-container" style="height: 600px;">
+              <table id="tbl-billing">
+                <thead><tr><th>Load</th><th>Status</th><th>Findings</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADMIN -->
+        <div id="admin" class="view">
+          <div class="grid-2-1">
+            <div class="card">
+              <div class="card-header"><h3>Agent OS Control Plane</h3></div>
+              <div class="card-body">
+                <div style="display:grid; gap:12px;">
+                  <input class="input" id="agent-objective" placeholder="Objective (e.g. assign, review tickets, export billing)">
+                  <div style="display:grid; grid-template-columns: 1fr 1fr 120px; gap:8px;">
+                    <select class="input" id="agent-autonomy">
+                      <option value="L3">L3</option>
+                      <option value="L2">L2</option>
+                      <option value="L1">L1</option>
+                    </select>
+                    <select class="input" id="agent-mode">
+                      <option value="hybrid">hybrid</option>
+                      <option value="state_first">state_first</option>
+                      <option value="ui_first">ui_first</option>
+                    </select>
+                    <input class="input" id="agent-max-steps" type="number" value="12" min="1" max="100">
+                  </div>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
+                    <input id="agent-dry-run" type="checkbox"> Dry run (no mutations)
+                  </label>
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn btn-primary btn-sm" id="agent-run-btn">Run Agent Objective</button>
+                    <button class="btn btn-secondary btn-sm" id="agent-refresh-btn">Refresh Agent State</button>
+                  </div>
+                  <div class="tiny" id="agent-run-msg">Agent OS idle.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>Agent OS Metrics</h3></div>
+              <div class="card-body">
+                <div class="kv">
+                  <div><span>Total Runs</span><strong id="agent-m-runs">0</strong></div>
+                  <div><span>Completed</span><strong id="agent-m-complete">0</strong></div>
+                  <div><span>Waiting Approval</span><strong id="agent-m-waiting">0</strong></div>
+                  <div><span>Failed</span><strong id="agent-m-failed">0</strong></div>
+                  <div><span>Step Success Rate</span><strong id="agent-m-success">0%</strong></div>
+                  <div><span>P95 Step Latency</span><strong id="agent-m-p95">0ms</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-1-1" style="margin-top:24px;">
+            <div class="card">
+              <div class="card-header"><h3>Pending Approvals</h3></div>
+              <div class="table-container" style="height: 240px;">
+                <table id="tbl-agent-approvals">
+                  <thead><tr><th>Approval</th><th>Run</th><th>Note</th><th>Action</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3>Recent Runs</h3></div>
+              <div class="table-container" style="height: 240px;">
+                <table id="tbl-agent-runs">
+                  <thead><tr><th>Run</th><th>Status</th><th>Objective</th><th>Action</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:24px;">
+            <div class="card-header"><h3>Run Timeline</h3></div>
+            <div class="card-body">
+              <pre id="agent-run-detail" style="margin:0; white-space:pre-wrap; color:var(--text-secondary); font-size:12px;">Select a run to inspect timeline...</pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Widget -->
+  <button class="fab" id="chat-toggle" title="Open Atlas">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+  </button>
+
+  <div id="chat-overlay">
+    <div class="chat-header">
+      <span>Atlas</span>
+      <button id="chat-close" style="background:none; border:none; color:var(--text-tertiary); cursor:pointer;">✕</button>
+    </div>
+    <div class="chat-body" id="chat-messages">
+      <div class="msg bot">Tell me what you want done. I can assign loads, review/resolve tickets, and answer document questions with citations.</div>
+      <div class="chat-suggestions" id="chat-suggestions"></div>
+    </div>
+    <form class="chat-footer" id="chat-form">
+      <input type="text" class="input" id="chat-input" placeholder="Type what you want Atlas to do..." autocomplete="off">
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="ticket-modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <strong id="ticket-modal-title">Ticket Review</strong>
+        <button class="btn btn-secondary btn-sm" id="ticket-modal-close">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="kv" id="ticket-modal-kv"></div>
+        <div>
+          <div style="font-weight:600; margin-bottom:6px;">Linked Documents</div>
+          <div class="tiny" id="ticket-modal-docs">No linked docs.</div>
+        </div>
+        <div>
+          <div style="font-weight:600; margin-bottom:6px;">Review History</div>
+          <div class="table-container" style="max-height:220px;">
+            <table id="ticket-modal-reviews">
+              <thead><tr><th>Review</th><th>Status</th><th>Ticket</th><th>Reason</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-sm" id="ticket-run-review">Run AI Review</button>
+        <button class="btn btn-secondary btn-sm" id="ticket-resolve-review">Approve + Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = window.OPENCLAW_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+    const s = (id) => document.getElementById(id);
+    const esc = (t) => String(t||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    // --- State ---
+    const state = {
+      busy: false,
+      drivers: [],
+      loadsById: {},
+      pendingTickets: {},
+      lastFlaggedTicket: "",
+      activeTicketLoadId: "",
+      activeTicketReviewId: "",
+      chatBusy: false,
+      atlasSessionId: ""
+    };
+
+    function log(msg) {
+      const ul = s('activity-feed');
+      const li = document.createElement('li');
+      li.className = 'feed-item';
+      const time = new Date().toLocaleTimeString([], {hour12:false});
+      li.innerHTML = `<span class="feed-time">${time}</span><span class="feed-text">${esc(msg)}</span>`;
+      if(ul.children.length > 20) ul.lastElementChild.remove();
+      ul.prepend(li);
+    }
+
+    // --- API ---
+    async function req(path, opts={}) {
+      const timeoutMs = Number.isFinite(opts.timeout) ? opts.timeout : 15000;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const r = await fetch(API+path, {
+          ...opts,
+          signal: controller.signal,
+          headers: {
+            'Content-Type':'application/json',
+            'X-Tenant-ID':'demo',
+            'X-Actor-Role':'admin',
+            ...(opts.headers||{})
+          }
+        });
+        const d = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(d.detail || `Error ${r.status}`);
+        return d;
+      } catch(e) {
+        if (e && e.name === 'AbortError') throw new Error(`Request timed out (${timeoutMs}ms)`);
+        throw e;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // --- Chat Logic ---
+    const chatOverlay = s('chat-overlay');
+    const chatInput = s('chat-input');
+    const chatMsgs = s('chat-messages');
+    const chatSuggestions = s('chat-suggestions');
+    const chatSendBtn = s('chat-form').querySelector('button[type="submit"]');
+
+    const quickPrompts = [
+      "What drivers are available right now?",
+      "Assign available drivers to planned loads and run ticket checks.",
+      "What tickets are flagged? Resolve the first one.",
+      "Who did LOAD00008 and what was the invoice?",
+      "Give me a quick dispatch + billing summary."
+    ];
+
+    function ensureAtlasSession() {
+      let sid = localStorage.getItem('atlas_session_id');
+      if (!sid) {
+        sid = `atlas-${Date.now()}`;
+        localStorage.setItem('atlas_session_id', sid);
+      }
+      state.atlasSessionId = sid;
+    }
+
+    function renderChatSuggestions() {
+      if (!chatSuggestions) return;
+      chatSuggestions.innerHTML = '';
+      quickPrompts.forEach((prompt) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip';
+        btn.textContent = prompt;
+        btn.onclick = () => sendAtlasPrompt(prompt);
+        chatSuggestions.appendChild(btn);
+      });
+    }
+
+    function formatActionTrail(actions) {
+      if (!Array.isArray(actions) || !actions.length) return '';
+      const rows = actions.slice(0, 5).map((a) => {
+        const mark = a.ok ? 'OK' : 'ERR';
+        return `<div>• ${esc(a.tool || 'tool')} [${mark}]</div>`;
+      }).join('');
+      return `<div class="msg-tools"><strong>Agent actions</strong>${rows}</div>`;
+    }
+
+    async function sendAtlasPrompt(text, opts={}) {
+      const txt = String(text || '').trim();
+      if (!txt || state.chatBusy) return;
+      const silentUser = !!opts.silentUser;
+      const timeout = Number.isFinite(opts.timeout) ? opts.timeout : 45000;
+
+      if (!silentUser) {
+        chatMsgs.innerHTML += `<div class="msg user">${esc(txt)}</div>`;
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+      }
+
+      const botDiv = document.createElement('div');
+      botDiv.className = 'msg bot msg-thinking';
+      botDiv.textContent = 'Atlas is working...';
+      chatMsgs.appendChild(botDiv);
+      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+
+      state.chatBusy = true;
+      chatInput.disabled = true;
+      chatSendBtn.disabled = true;
+
+      try {
+        const res = await req('/ops/copilot/query', {
+          method:'POST',
+          timeout,
+          body: JSON.stringify({
+            query: txt,
+            mode: 'free_roam',
+            session_id: state.atlasSessionId || 'atlas'
+          })
+        });
+        botDiv.classList.remove('msg-thinking');
+        botDiv.innerHTML = `
+          ${esc(res.answer || 'Done.')}
+          <span class="msg-meta">Confidence: ${Math.round(Number(res.confidence || 0)*100)}% • ${esc(res.route || 'deterministic')}</span>
+          ${formatActionTrail(res.actions)}
+        `;
+        await loadBoard();
+        await loadQueue();
+        await loadBilling();
+        await loadMetrics();
+      } catch (err) {
+        const msg = err && err.message ? err.message : "I'm having trouble connecting to the ops engine.";
+        botDiv.classList.remove('msg-thinking');
+        botDiv.innerHTML = `${esc(msg)}<span class="msg-meta">Confidence: 0%</span>`;
+      } finally {
+        state.chatBusy = false;
+        chatInput.disabled = false;
+        chatSendBtn.disabled = false;
+        chatInput.focus();
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+      }
+    }
+
+    s('chat-toggle').onclick = () => {
+      chatOverlay.classList.add('open');
+      setTimeout(() => chatInput.focus(), 50);
+    };
+    s('chat-close').onclick = () => chatOverlay.classList.remove('open');
+
+    s('chat-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const txt = chatInput.value.trim();
+      if(!txt) return;
+      chatInput.value = '';
+      await sendAtlasPrompt(txt);
+    };
+
+    // --- Ticket Modal ---
+    const ticketModal = s('ticket-modal');
+    const ticketModalKv = s('ticket-modal-kv');
+    const ticketModalDocs = s('ticket-modal-docs');
+    const ticketModalReviews = s('ticket-modal-reviews').querySelector('tbody');
+
+    function closeTicketModal() {
+      ticketModal.classList.remove('open');
+      state.activeTicketLoadId = '';
+      state.activeTicketReviewId = '';
+    }
+    s('ticket-modal-close').onclick = closeTicketModal;
+    ticketModal.onclick = (e) => { if (e.target === ticketModal) closeTicketModal(); };
+
+    function renderTicketDossier(data) {
+      const load = data?.load || {};
+      const review = data?.latest_review || {};
+      const billing = data?.billing || {};
+      state.activeTicketReviewId = review.review_id || '';
+      const statusLabel = (load.status === 'delivered' ? 'complete' : load.status || '-');
+      const assn = load.assignment || {};
+
+      s('ticket-modal-title').textContent = `Ticket Review - ${load.load_id || state.activeTicketLoadId}`;
+      ticketModalKv.innerHTML = `
+        <div><span>Load</span>${esc(load.load_id || '-')}</div>
+        <div><span>Status</span>${esc(statusLabel)}</div>
+        <div><span>Driver</span>${esc(assn.driver_name || assn.driver_id || '-')}</div>
+        <div><span>Broker</span>${esc(load.broker || '-')}</div>
+        <div><span>Miles</span>${esc(load.planned_miles ?? '-')}</div>
+        <div><span>Rate</span>${esc(load.rate_total ?? '-')}</div>
+        <div><span>Ticket #</span>${esc(review.ticket_number || state.pendingTickets[load.load_id] || '-')}</div>
+        <div><span>Review</span>${esc(review.status || 'not reviewed')}</div>
+        <div><span>Reason</span>${esc(review.approval_reason || '-')}</div>
+        <div><span>Billing</span>${esc(billing.status || '-')}</div>
+      `;
+
+      const docs = (data?.documents || []).map(d => `${d.filename} (${d.document_type})`);
+      ticketModalDocs.textContent = docs.length ? docs.join(' | ') : 'No linked docs.';
+
+      ticketModalReviews.innerHTML = '';
+      (data?.reviews || []).forEach(r => {
+        const tr = document.createElement('tr');
+        const tag = r.status === 'exception' ? 'red' : 'green';
+        tr.innerHTML = `
+          <td class="mono">${esc(r.review_id || '-')}</td>
+          <td><span class="tag ${tag}">${esc(r.status || '-')}</span></td>
+          <td class="mono">${esc(r.ticket_number || '-')}</td>
+          <td>${esc(r.approval_reason || '-')}</td>
+        `;
+        ticketModalReviews.appendChild(tr);
+      });
+      if (!ticketModalReviews.children.length) {
+        ticketModalReviews.innerHTML = `<tr><td colspan="4" class="tiny">No reviews yet.</td></tr>`;
+      }
+    }
+
+    window.openTicketModal = async (loadId) => {
+      if (!loadId) return;
+      state.activeTicketLoadId = loadId;
+      ticketModal.classList.add('open');
+      ticketModalKv.innerHTML = `<div class="tiny">Loading ticket context...</div>`;
+      ticketModalDocs.textContent = 'Loading...';
+      ticketModalReviews.innerHTML = '';
+      try {
+        const data = await req(`/ops/tickets/load/${encodeURIComponent(loadId)}`);
+        renderTicketDossier(data);
+      } catch (e) {
+        ticketModalKv.innerHTML = `<div class="tiny">${esc(e.message || 'Failed to load ticket context.')}</div>`;
+        ticketModalDocs.textContent = 'Unavailable';
+      }
+    };
+
+    s('ticket-run-review').onclick = async () => {
+      if (!state.activeTicketLoadId) return;
+      await reviewLoadTicket(state.activeTicketLoadId);
+      await window.openTicketModal(state.activeTicketLoadId);
+    };
+
+    s('ticket-resolve-review').onclick = async () => {
+      if (!state.activeTicketReviewId) {
+        log('Atlas: No exception review selected.');
+        return;
+      }
+      try {
+        await req(`/ops/tickets/${encodeURIComponent(state.activeTicketReviewId)}/decision`, {
+          method:'POST',
+          body: JSON.stringify({decision: 'resolve', note: 'Resolved in SHAMS ticket modal'})
+        });
+        log(`Atlas: Resolved ${state.activeTicketReviewId} and completed load.`);
+        await loadQueue();
+        await loadBilling();
+        await loadBoard();
+        await window.openTicketModal(state.activeTicketLoadId);
+      } catch (e) {
+        log(`Atlas: Failed to resolve ticket - ${e.message}`);
+      }
+    };
+
+    // --- Core Ops ---
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    function makeTicketNumber() {
+      const base = String(Date.now()).slice(-8);
+      const rand = Math.floor(Math.random() * 9000 + 1000);
+      return `TKT-${base}${rand}`;
+    }
+
+    function getLoad(loadId) {
+      return state.loadsById[loadId] || null;
+    }
+
+    async function loadBoard() {
+      try {
+        const d = await req('/ops/dispatch/board');
+        state.drivers = d.drivers || [];
+        state.loadsById = {};
+        (d.loads || []).forEach(load => {
+          if(load && load.load_id) state.loadsById[load.load_id] = load;
+        });
+        
+        // Loads
+        const tb = s('tbl-loads').querySelector('tbody');
+        tb.innerHTML = '';
+        (d.loads||[]).forEach(r => {
+          const tr = document.createElement('tr');
+          let tag = 'gray';
+          if(r.status==='assigned') tag = 'gray';
+          if(r.status==='blocked') tag = 'red';
+          if(r.status==='en_route') tag = 'amber';
+          if(r.status==='delivered') tag = 'green';
+          if(r.status==='planned') tag = 'blue';
+          const statusLabel = r.status === 'delivered' ? 'complete' : r.status;
+          
+          let actionBtn = `<button class="btn btn-secondary btn-sm" onclick="openTicketModal('${r.load_id}')">Review Ticket</button>`;
+          if(r.status === 'planned') {
+             actionBtn = `<button class="btn btn-secondary btn-sm" onclick="attemptAssign('${r.load_id}')">Assign</button>`;
+          } else if (r.status === 'assigned' || r.status === 'en_route') {
+             actionBtn = `
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary btn-sm" onclick="dispatchLoad('${r.load_id}')">Dispatch</button>
+                <button class="btn btn-secondary btn-sm" onclick="openTicketModal('${r.load_id}')">Review</button>
+              </div>
+             `;
+          } else if (r.status === 'delivered') {
+             actionBtn = `<button class="btn btn-secondary btn-sm" onclick="openTicketModal('${r.load_id}')">View Ticket</button>`;
+          }
+
+          tr.innerHTML = `
+            <td class="mono">${esc(r.load_id)}</td>
+            <td>${esc(r.customer)}</td>
+            <td><span class="tag ${tag}">${esc(statusLabel)}</span></td>
+            <td class="mono">${esc(r.planned_miles)}</td>
+            <td>${actionBtn}</td>
+          `;
+          tb.appendChild(tr);
+        });
+
+        // Drivers
+        const db = s('tbl-drivers').querySelector('tbody');
+        db.innerHTML = '';
+        state.drivers.forEach(r => {
+          const tr = document.createElement('tr');
+          const tag = r.status==='available' ? 'green' : 'gray';
+          tr.innerHTML = `<td>${esc(r.name)}</td><td class="mono">${esc(r.truck_id)}</td><td><span class="tag ${tag}">${esc(r.status)}</span></td>`;
+          db.appendChild(tr);
+        });
+        s('driver-count').innerText = `${state.drivers.length} Drivers`;
+
+      } catch {}
+    }
+
+    async function loadDispatchFeed() {
+      try {
+        const d = await req('/ops/integrations/driver-app/dispatch/feed?limit=30');
+        const tb = s('tbl-dispatch-feed').querySelector('tbody');
+        tb.innerHTML = '';
+        const items = d.items || [];
+        items.forEach((row) => {
+          const tr = document.createElement('tr');
+          const status = String(row.status || 'sent');
+          const tag = status === 'sent' ? 'green' : 'gray';
+          tr.innerHTML = `
+            <td class="mono">${esc(row.dispatch_id || '-')}</td>
+            <td class="mono">${esc(row.load_id || '-')}</td>
+            <td>${esc(row.payload?.driver_name || row.driver_id || '-')}</td>
+            <td><span class="tag ${tag}">${esc(status)}</span></td>
+            <td class="mono">${esc((row.sent_at || '').replace('T', ' ').replace('Z', ''))}</td>
+          `;
+          tb.appendChild(tr);
+        });
+        if (!items.length) {
+          tb.innerHTML = `<tr><td colspan="5" class="tiny">No dispatch packets sent yet.</td></tr>`;
+        }
+        s('dispatch-feed-msg').textContent = `${items.length} dispatch packet(s) in feed.`;
+      } catch (e) {
+        s('dispatch-feed-msg').textContent = `Dispatch feed unavailable: ${e.message}`;
+      }
+    }
+
+    window.dispatchLoad = async (loadId) => {
+      const id = String(loadId || '').trim().toUpperCase();
+      if (!id) return;
+      try {
+        const res = await req(`/ops/integrations/driver-app/dispatch/send/${encodeURIComponent(id)}`, {method: 'POST'});
+        s('dispatch-load-id').value = id;
+        log(`Atlas: Dispatch packet sent for ${id} (${res.dispatch_id}).`);
+        await loadDispatchFeed();
+        await loadBoard();
+      } catch (e) {
+        log(`Atlas: Dispatch failed for ${id} - ${e.message}`);
+      }
+    };
+
+    // --- Assign Logic with Driver Check ---
+    window.attemptAssign = async (loadId) => {
+      const available = state.drivers.filter(d => d.status === 'available');
+      if (available.length === 0) {
+        alert("Alert: No drivers are currently available in the fleet. Atlas cannot schedule this load.");
+        log(`Atlas: Assignment failed for ${loadId} - No drivers available.`);
+        return;
+      }
+
+      log(`Atlas: Optimizing assignment for ${loadId}...`);
+      try {
+        const r = await req('/ops/dispatch/assign', {method:'POST', body:JSON.stringify({load_id: loadId, auto: true})});
+        log(`Atlas: Assigned ${loadId} to ${r.driver_name}.`);
+        if (!state.pendingTickets[loadId]) {
+          state.pendingTickets[loadId] = makeTicketNumber();
+        }
+        log(`Driver ticket ready for ${loadId}: ${state.pendingTickets[loadId]}. Click Review Ticket.`);
+        loadBoard();
+      } catch(e) {
+        log(`Atlas: Error assigning load - ${e.message}`);
+      }
+    };
+
+    window.reviewLoadTicket = async (loadId, options={}) => {
+      const { forceFlag = false, silent = false } = options;
+      const load = getLoad(loadId);
+      if (!load) {
+        log(`Atlas: Cannot review ${loadId} - load not found.`);
+        return null;
+      }
+      const ratedMiles = Number(load.planned_miles || 0);
+      const zone = String(load.zone || '').trim() || 'FL-Z1';
+      const expectedRate = Number(load.rate_total || 0);
+      const ticketNumber = state.pendingTickets[loadId] || makeTicketNumber();
+      state.pendingTickets[loadId] = ticketNumber;
+
+      const reviewPayload = {
+        load_id: loadId,
+        ticket_number: ticketNumber,
+        rated_miles: ratedMiles,
+        gps_miles: forceFlag ? Number((ratedMiles * 1.22).toFixed(2)) : Number((ratedMiles * 1.01).toFixed(2)),
+        zone: forceFlag ? `${zone}-MISMATCH` : zone,
+        expected_rate: expectedRate
+      };
+      if (!silent) log(`Atlas: Reviewing ${ticketNumber} for ${loadId}...`);
+      try {
+        const res = await req('/ops/tickets/review', {method:'POST', body:JSON.stringify(reviewPayload)});
+        const pct = Math.round((Number(res.final_confidence || 0)) * 100);
+        if (res.status === 'exception') {
+          state.lastFlaggedTicket = res.ticket_number || ticketNumber;
+          log(`Atlas: Flagged ${res.ticket_number || ticketNumber} (${pct}% conf) - ${res.approval_reason}`);
+        } else {
+          log(`Atlas: Approved ${res.ticket_number || ticketNumber} (${pct}% conf).`);
+        }
+        await loadBoard();
+        await loadQueue();
+        await loadBilling();
+        return res;
+      } catch (e) {
+        log(`Atlas: Ticket review failed for ${loadId} - ${e.message}`);
+        return null;
+      }
+    };
+
+    // --- Other Loaders ---
+    async function loadQueue() {
+      try {
+        const d = await req('/ops/tickets/queue');
+        const tb = s('tbl-queue').querySelector('tbody');
+        tb.innerHTML = '';
+        (d.items||[]).forEach(r => {
+          const tr = document.createElement('tr');
+          const tag = r.status==='approved' ? 'green' : 'red';
+          const action = r.status==='exception' 
+            ? `<button class="btn btn-secondary btn-sm" onclick="resolveTicket('${r.review_id}')">Resolve</button>` 
+            : '<span class="tag green">Approved</span>';
+          const confidence = Number(r.final_confidence ?? 0);
+          const failed = (r.failed_rules || []).slice(0, 2).join('; ');
+          const missing = (r.missing_documents || []).join(', ');
+          const reason = r.status === 'exception'
+            ? [r.approval_reason, failed, missing ? `missing: ${missing}` : ''].filter(Boolean).join(' | ')
+            : (r.approval_reason || 'Auto-approved');
+
+          tr.innerHTML = `
+            <td class="mono">${esc(r.review_id)}</td>
+            <td>${esc(r.load_id)}<div style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">${esc(r.ticket_number || '-')}</div></td>
+            <td><span class="tag ${tag}">${confidence.toFixed(2)}</span></td>
+            <td>${action}<div style="font-size:11px; color:var(--text-tertiary); margin-top:4px; max-width:340px;">${esc(reason)}</div></td>
+          `;
+          tb.appendChild(tr);
+        });
+      } catch {}
+    }
+
+    window.resolveTicket = async (id) => {
+      log(`Atlas: Resolving discrepancy ${id}...`);
+      await req(`/ops/tickets/${id}/decision`, {method:'POST', body:JSON.stringify({decision:'resolve', note:'Resolved from SHAMS UI after exception review'})});
+      await loadBoard();
+      await loadQueue();
+      await loadBilling();
+    };
+
+    async function loadBilling() {
+       try {
+         const d = await req('/ops/billing/readiness');
+         const tb = s('tbl-billing').querySelector('tbody');
+         tb.innerHTML = '';
+         (d.items||[]).forEach(r => {
+           const tr = document.createElement('tr');
+           const tag = r.billing_ready ? 'green' : 'amber';
+           const txt = r.billing_ready ? 'Ready' : 'Hold';
+           const action = r.billing_ready
+             ? `<button class="btn btn-secondary btn-sm" onclick="exportBilling('${r.load_id}')">Export</button>`
+             : `<span class="tag gray">Pending</span>`;
+           tr.innerHTML = `<td class="mono">${esc(r.load_id)}</td><td><span class="tag ${tag}">${txt}</span></td><td>${esc((r.missing_documents||[]).join(', ')||'-')}</td><td>${action}</td>`;
+           tb.appendChild(tr);
+         });
+       } catch {}
+    }
+
+    window.exportBilling = async (loadId) => {
+      try {
+        const r = await req(`/ops/integrations/mcleod/export/${encodeURIComponent(loadId)}`, {method:'POST'});
+        log(`Atlas: Exported ${loadId} (${r.export_id}).`);
+      } catch (e) {
+        log(`Atlas: Export failed for ${loadId} - ${e.message}`);
+      }
+    };
+
+    async function loadMetrics() {
+      try {
+        const m = await req('/ops/metrics');
+        s('kpi-loads').innerText = m.active_loads;
+        s('kpi-assign').innerText = Math.round(m.auto_assignment_rate*100)+'%';
+        s('kpi-approve').innerText = Math.round(m.auto_approval_rate*100)+'%';
+        s('kpi-rev').innerText = '$'+Math.round(m.estimated_leakage_recovered_usd).toLocaleString();
+      } catch {}
+    }
+
+    // --- Agent OS ---
+    async function loadAgentOS() {
+      try {
+        const [metrics, runs, approvals] = await Promise.all([
+          req('/agent-os/metrics'),
+          req('/agent-os/runs?limit=25'),
+          req('/agent-os/approvals/pending?limit=25')
+        ]);
+
+        s('agent-m-runs').textContent = metrics.runs_total ?? 0;
+        s('agent-m-complete').textContent = metrics.runs_completed ?? 0;
+        s('agent-m-waiting').textContent = metrics.runs_waiting_approval ?? 0;
+        s('agent-m-failed').textContent = metrics.runs_failed ?? 0;
+        s('agent-m-success').textContent = `${Math.round((metrics.step_success_rate || 0) * 100)}%`;
+        s('agent-m-p95').textContent = `${Math.round(metrics.p95_step_latency_ms || 0)}ms`;
+
+        const runsBody = s('tbl-agent-runs').querySelector('tbody');
+        runsBody.innerHTML = '';
+        (runs.items || []).forEach(run => {
+          const tr = document.createElement('tr');
+          const status = String(run.status || '');
+          const tag = status.includes('failed') ? 'red' : (status.includes('waiting') ? 'amber' : (status.includes('completed') ? 'green' : 'gray'));
+          tr.innerHTML = `
+            <td class="mono">${esc(run.run_id || '-')}</td>
+            <td><span class="tag ${tag}">${esc(status)}</span></td>
+            <td>${esc(run.objective || '-')}</td>
+            <td><button class="btn btn-secondary btn-sm" data-action="agent-view-run" data-run-id="${esc(run.run_id || '')}">View</button></td>
+          `;
+          runsBody.appendChild(tr);
+        });
+        if (!runsBody.children.length) {
+          runsBody.innerHTML = `<tr><td colspan="4" class="tiny">No runs yet.</td></tr>`;
+        }
+
+        const approvalsBody = s('tbl-agent-approvals').querySelector('tbody');
+        approvalsBody.innerHTML = '';
+        (approvals.items || []).forEach(a => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="mono">${esc(a.approval_id || '-')}</td>
+            <td class="mono">${esc(a.run_id || '-')}</td>
+            <td>${esc(a.note || '-')}</td>
+            <td style="display:flex; gap:6px;">
+              <button class="btn btn-secondary btn-sm" data-action="agent-approve" data-run-id="${esc(a.run_id || '')}" data-approval-id="${esc(a.approval_id || '')}" data-approve="true">Approve</button>
+              <button class="btn btn-secondary btn-sm" data-action="agent-approve" data-run-id="${esc(a.run_id || '')}" data-approval-id="${esc(a.approval_id || '')}" data-approve="false">Reject</button>
+            </td>
+          `;
+          approvalsBody.appendChild(tr);
+        });
+        if (!approvalsBody.children.length) {
+          approvalsBody.innerHTML = `<tr><td colspan="4" class="tiny">No pending approvals.</td></tr>`;
+        }
+      } catch (e) {
+        s('agent-run-msg').textContent = `Agent OS unavailable: ${e.message}`;
+      }
+    }
+
+    window.openAgentRun = async (runId) => {
+      try {
+        const timeline = await req(`/agent-os/runs/${encodeURIComponent(runId)}/timeline`);
+        s('agent-run-detail').textContent = JSON.stringify(timeline, null, 2);
+        s('agent-run-msg').textContent = `Loaded run ${runId}.`;
+        s('agent-run-detail').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+      } catch (e) {
+        s('agent-run-detail').textContent = `Failed to load run ${runId}: ${e.message}`;
+      }
+    };
+
+    window.agentApprove = async (runId, approvalId, approve) => {
+      try {
+        const res = await req(`/agent-os/runs/${encodeURIComponent(runId)}/approve`, {
+          method: 'POST',
+          body: JSON.stringify({approval_id: approvalId, approve, note: approve ? 'Approved in SHAMS UI' : 'Rejected in SHAMS UI'})
+        });
+        s('agent-run-msg').textContent = `Approval ${approvalId} ${approve ? 'approved' : 'rejected'}.`;
+        s('agent-run-detail').textContent = JSON.stringify(res, null, 2);
+        await loadAgentOS();
+        await refresh();
+      } catch (e) {
+        s('agent-run-msg').textContent = `Approval action failed: ${e.message}`;
+      }
+    };
+
+    // --- Navigation ---
+    window.nav = (page) => {
+      document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+      s(page).classList.add('active');
+      const btn = Array.from(document.querySelectorAll('.nav-item')).find(b => b.textContent.toLowerCase().includes(page==='tickets'?'exceptions':page));
+      if(btn) btn.classList.add('active');
+      s('page-title').textContent = page.charAt(0).toUpperCase() + page.slice(1);
+      if (page === 'admin') loadAgentOS();
+    };
+
+    // --- Demo Script ---
+    s('btn-script').onclick = async () => {
+      const btn = s('btn-script');
+      btn.disabled = true;
+      try {
+        log('Demo: Resetting environment...');
+        await req('/ops/seed/demo-pack', {
+          method:'POST',
+          body:JSON.stringify({
+            seed:Date.now(),
+            loads:12,
+            docs_per_load:4,
+            include_exceptions_ratio:0.0,
+            index_documents:false
+          })
+        });
+        await loadBoard();
+
+        log('Demo: Creating one new priority load...');
+        await req('/ops/dispatch/loads', {
+          method:'POST',
+          body:JSON.stringify({
+            customer:'Shipper A',
+            broker:'TQL',
+            pickup_location:'Fort Myers, FL',
+            delivery_location:'Tampa, FL',
+            planned_miles:150,
+            rate_total:900,
+            zone:'FL-Z2',
+            source:'manual'
+          })
+        });
+        await loadBoard();
+
+        log('Demo: Assigning four loads to drivers...');
+        const board = await req('/ops/dispatch/board');
+        const plannedLoads = (board.loads || []).filter(l => l.status === 'planned').slice(0, 4);
+        for (const row of plannedLoads) {
+          await window.attemptAssign(row.load_id);
+          await sleep(600);
+        }
+
+        log('Demo: Sending dispatch packets to driver app...');
+        await req('/ops/integrations/driver-app/dispatch/send-batch?limit=4', {method: 'POST'});
+        await loadDispatchFeed();
+
+        log('Demo: Verifying tickets (3 approve, 1 flagged)...');
+        for (let i = 0; i < plannedLoads.length; i++) {
+          const row = plannedLoads[i];
+          await window.reviewLoadTicket(row.load_id, {forceFlag: i === plannedLoads.length - 1, silent: true});
+          await sleep(700);
+        }
+
+        if (state.lastFlaggedTicket) {
+          log(`Demo: Ask Atlas chat -> "for ticket#${state.lastFlaggedTicket} why did it flag?"`);
+        }
+        log('Demo: Complete. You can manually Assign/Review/Resolve/Export from UI now.');
+      } catch(e) { log('Demo failed: ' + e.message); }
+      finally { btn.disabled = false; }
+    };
+
+    s('btn-seed').onclick = async () => {
+      await req('/ops/seed/demo-pack', {method:'POST', body:JSON.stringify({seed:Date.now(), loads:20, docs_per_load:4, include_exceptions_ratio:0.0, index_documents:false})});
+      log('Demo data reset complete.');
+      refresh();
+    };
+
+    if (s('btn-auto')) {
+      s('btn-auto').onclick = async () => {
+        log('Atlas: Running full autonomous batch...');
+        await req('/ops/autonomy/run', {method:'POST', body:JSON.stringify({max_loads:50})});
+        refresh();
+      };
+    }
+
+    s('btn-atlas-demo').onclick = async () => {
+      s('chat-toggle').click();
+      await sleep(180);
+      await sendAtlasPrompt('Give me a quick dispatch summary.');
+      await sleep(500);
+      await sendAtlasPrompt('Assign available drivers to planned loads and run ticket checks.');
+      await sleep(500);
+      await sendAtlasPrompt('What tickets are flagged? Resolve the first one.');
+      await sleep(500);
+      await sendAtlasPrompt('Summarize what changed and what still needs human attention.');
+    };
+
+    s('dispatch-send-one').onclick = async () => {
+      const loadId = String(s('dispatch-load-id').value || '').trim().toUpperCase();
+      if (!loadId) {
+        s('dispatch-feed-msg').textContent = 'Enter a load ID to dispatch.';
+        return;
+      }
+      await window.dispatchLoad(loadId);
+    };
+
+    s('dispatch-send-batch').onclick = async () => {
+      try {
+        const res = await req('/ops/integrations/driver-app/dispatch/send-batch?limit=10', {method: 'POST'});
+        const sent = Number(res.sent || 0);
+        const errors = (res.errors || []).length;
+        s('dispatch-feed-msg').textContent = `Batch dispatch completed. Sent ${sent}, errors ${errors}.`;
+        log(`Atlas: Batch dispatch sent ${sent} packet(s).`);
+        await loadDispatchFeed();
+        await loadBoard();
+      } catch (e) {
+        s('dispatch-feed-msg').textContent = `Batch dispatch failed: ${e.message}`;
+      }
+    };
+
+    s('dispatch-feed-refresh').onclick = async () => {
+      await loadDispatchFeed();
+    };
+
+    s('agent-run-btn').onclick = async () => {
+      const objective = s('agent-objective').value.trim();
+      if (!objective) {
+        s('agent-run-msg').textContent = 'Enter an objective first.';
+        return;
+      }
+      s('agent-run-msg').textContent = 'Running Agent OS objective...';
+      try {
+        const payload = {
+          objective,
+          autonomy_level: s('agent-autonomy').value || 'L3',
+          execution_mode: s('agent-mode').value || 'hybrid',
+          dry_run: !!s('agent-dry-run').checked,
+          max_steps: Number(s('agent-max-steps').value || 12),
+        };
+        const run = await req('/agent-os/runs', {method:'POST', body: JSON.stringify(payload), timeout: 45000});
+        const status = run?.run?.status || 'unknown';
+        s('agent-run-msg').textContent = `Agent run ${run?.run?.run_id || '-'} finished with status ${status}.`;
+        s('agent-run-detail').textContent = JSON.stringify(run, null, 2);
+        await loadAgentOS();
+        await refresh();
+      } catch (e) {
+        s('agent-run-msg').textContent = `Agent run failed: ${e.message}`;
+      }
+    };
+
+    s('agent-refresh-btn').onclick = async () => {
+      await loadAgentOS();
+    };
+
+    s('tbl-agent-runs').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action="agent-view-run"]');
+      if (!button) return;
+      const runId = button.getAttribute('data-run-id');
+      if (runId) window.openAgentRun(runId);
+    });
+
+    s('tbl-agent-approvals').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action="agent-approve"]');
+      if (!button) return;
+      const runId = button.getAttribute('data-run-id');
+      const approvalId = button.getAttribute('data-approval-id');
+      const approve = button.getAttribute('data-approve') === 'true';
+      if (runId && approvalId) window.agentApprove(runId, approvalId, approve);
+    });
+
+    function refresh() { loadBoard(); loadQueue(); loadBilling(); loadMetrics(); loadDispatchFeed(); }
+    
+    // Init
+    ensureAtlasSession();
+    renderChatSuggestions();
+    s('nav-seed').onclick = () => s('btn-seed').click();
+    setInterval(async () => {
+       try { await req('/health', {timeout:1000}); s('sys-dot').classList.remove('offline'); s('sys-text').innerText='Online'; }
+       catch { s('sys-dot').classList.add('offline'); s('sys-text').innerText='Offline'; }
+    }, 5000);
+    refresh();
+
+  </script>
+</body>
+</html>

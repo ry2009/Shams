@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - CHROMA_DB_PATH=/app/data/chroma
+      - LOG_LEVEL=INFO
+      - AUTH_ENABLED=${AUTH_ENABLED:-false}
+      - DEFAULT_TENANT_ID=${DEFAULT_TENANT_ID:-demo}
+      - TENANT_TOKENS=${TENANT_TOKENS}
+      - MS_GRAPH_TENANT_ID=${MS_GRAPH_TENANT_ID}
+      - MS_GRAPH_CLIENT_ID=${MS_GRAPH_CLIENT_ID}
+      - MS_GRAPH_CLIENT_SECRET=${MS_GRAPH_CLIENT_SECRET}
+      - MS_GRAPH_USER_ID=${MS_GRAPH_USER_ID}
+      - MS_GRAPH_DRIVE_ID=${MS_GRAPH_DRIVE_ID}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Optional: ChromaDB as separate service for scaling
+  # chromadb:
+  #   image: chromadb/chroma:latest
+  #   ports:
+  #     - "8001:8000"
+  #   volumes:
+  #     - ./data/chroma:/chroma/chroma

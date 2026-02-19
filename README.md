@@ -4,7 +4,7 @@ Autonomous dispatch + ticketing + billing operations for trucking companies.
 
 SHAMS replaces repetitive back-office workflows with an AI control layer that is fast, auditable, and deployable on top of existing systems.
 
-## Investor TL;DR
+## Synopsis
 
 - Trucking back offices still run on manual clicks, spreadsheets, email attachments, and legacy TMS interfaces.
 - SHAMS automates the highest-frequency workflows: load assignment, ticket review, billing readiness, export, and follow-up actions.
@@ -59,7 +59,7 @@ This is not a “better dashboard” problem. It is an execution-automation prob
 - autonomy levels, execution modes, and run controls
 - pending approvals and run timeline inspection
 
-## Why This Product Wins
+## Why This Product 
 
 - **Execution over chat:** SHAMS does work (assign, review, resolve, export), not only Q&A.
 - **Deterministic + agent hybrid:** stable ops primitives with flexible language control.
@@ -99,6 +99,7 @@ SHAMS becomes the operations control plane for freight:
 - autonomous execution for repetitive workflows
 - human review where risk requires it
 - full traceability for compliance and customer trust
+- full RAG on entire database aking out need for mundane searches through thousands of links
 
 In short: one system where back-office work is orchestrated by agents and supervised by operators.
 
@@ -129,7 +130,7 @@ Open:
 - API docs: `http://localhost:8000/docs`
 - Health: `http://localhost:8000/health`
 
-## Investor Demo Script (Fast)
+## Demo Product (Fast)
 
 1. Click `Reset Demo Data`.
 2. Click `Run Guided Demo`.
